@@ -1,0 +1,15 @@
+services:
+  c-mask-detection:
+    image: cpc1hn/c-mask-detection:latest
+    network_mode: host
+    env_file:
+      - ./.env
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    volumes:
+      - ./src/certs:/app/src/certs:ro
+      - ${LOG_DIRECTORY:-./logs}:/app/logs
+      - ./src/models:/app/src/models:ro
+    restart: unless-stopped
+    deploy:
+      replicas: 2

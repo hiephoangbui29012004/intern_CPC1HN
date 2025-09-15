@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  camera-stream:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: camera-stream-app
+    network_mode: host
+    env_file:
+      - ./.env
+    volumes:
+      # Mount certificates directory if using SSL
+      - ./src/certs:/app/src/certs:ro
+      # Mount logs directory - configurable via LOG_DIRECTORY env var
+      - ${LOG_DIRECTORY:-./logs}:/app/logs
+    # networks:
+    #   - kafka-network
+    restart: unless-stopped

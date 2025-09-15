@@ -1,0 +1,137 @@
+@Library('anhnt-jenkins-library@master') _
+
+def gv
+def buildUrl
+def envIcon
+def envName
+
+pipeline {
+    agent any 
+
+    parameters {
+        string(name: 'MANUAL_BRANCH_NAME', defaultValue: env.BRANCH_NAME ?: "main", description: 'Branch to build manually')
+        booleanParam(name: 'ONLY_DEPLOY', defaultValue: false, description: 'Only deploy without building')
+        string(name: 'MANUAL_VERSION_TAG', description: 'Version tag to deploy manually')
+    }
+
+    environment {
+        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_NAMESPACE = 'cpc1hn'
+        DOCKER_CREDS = credentials('docker-cpc1hn')
+        APP_NAME = 'c-camera-stream'
+
+        SLACK_CHANNEL = 'ai-intern'
+
+        STAGING_HOST = '113.190.243.122'
+        STAGING_HOST_USER = 'cpc1hn'
+        STAGING_DIR = '~/staging-projects/c-camera-stream-staging'
+        STAGING_CREDS_ID = 'cpc1hn_deploy_118__81'
+        STAGING_ENV = 'c-camera-stream-staging-env'
+    }
+
+    stages {
+        stage('Init') {
+            steps {
+                script {
+                    gv = load 'script.groovy'
+
+                    env.DEPLOY_ENV = getDeploymentEnvironment()
+                    echo "Deployment environment set to: ${env.DEPLOY_ENV}"
+
+                    if (env.DEPLOY_ENV == 'other') {
+                        echo "Skipping further stages as the deployment environment is '${env.DEPLOY_ENV}'."
+                        currentBuild.result = 'UNSTABLE'
+                        return
+                    }
+
+                    gv.setupVersions()
+
+                    if(env.DEPLOY_ENV == 'test'){
+                        env.APP_NAME = "${env.APP_NAME}-test"
+                    }
+
+                    envIcon = getEnvIcon(env.DEPLOY_ENV)
+                    envName = env.DEPLOY_ENV.capitalize()
+                    buildUrl = "<${env.BUILD_URL}pipeline-console/|#${env.BUILD_NUMBER}>"
+                    def commitMessage = getCommitMessage()
+
+                    sendSlackNotification(
+                        "#FFFF00", 
+                        "${envIcon} *[${envName}]* *${env.APP_NAME}*: Deployment started ${buildUrl}",
+                        "• Branch: ${env.BRANCH_NAME ?: params.MANUAL_BRANCH_NAME} || Tag: ${env.DOCKER_VERSION_TAG}\n• Commit: ${commitMessage}"
+                    )
+                }
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                script {
+                    checkoutGithub()
+                }
+            }
+        }
+
+        stage('Build') {
+            when {
+                expression { !params.ONLY_DEPLOY }
+            }
+            steps {
+                script {
+                    gv.buildDockerImage()
+                    gv.pushDockerImage(env.DOCKER_VERSION_TAG)
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finished.'
+        }
+        success {
+            script {
+                if (env.DEPLOY_ENV != 'other') {
+                    echo "Pipeline and Deployment to ${env.DEPLOY_ENV} successful!"
+
+                    sendSlackNotification(
+                        "#36a64f", 
+                        "${envIcon} *[${envName}]* *${env.APP_NAME}*: Successfully deployed ${buildUrl}",
+                        ""
+                    )
+                } else {
+                    echo "Pipeline successful, deployment skipped (environment was '${env.DEPLOY_ENV}')."
+                }
+            }
+        }
+        unstable {
+            script {
+                if (env.DEPLOY_ENV == 'other') {
+                    sendSlackNotification(
+                        "#FFA500", 
+                        ":warning: - Skipped - Deployment not executed - unsupported environment <${env.BUILD_URL}pipeline-console/|#${env.BUILD_NUMBER}>",
+                        ""
+                    )
+                    echo "Pipeline finished with warning: Deployment environment was '${env.DEPLOY_ENV}'. Deployment skipped."
+                 } else {
+                    echo 'Pipeline finished with unstable status for other reasons.'
+                    sendSlackNotification(
+                        "#FFA500", 
+                        "${envIcon} *[${envName}]* *${env.APP_NAME}*: Unstable deployment for ${env.APP_NAME} <${env.BUILD_URL}pipeline-console/|#${env.BUILD_NUMBER}>",
+                        ""
+                    )
+                }
+            }
+        }
+        failure {
+            script {
+                echo 'Pipeline failed!'
+                sendSlackNotification(
+                    "#FF0000", 
+                    "${envIcon} *[${envName}]* *${env.APP_NAME}*: Failed to deploy ${env.APP_NAME} <${env.BUILD_URL}pipeline-console/|#${env.BUILD_NUMBER}>",
+                    ""
+                )
+            }
+        }
+    }
+}

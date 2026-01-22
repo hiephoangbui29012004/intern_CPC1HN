@@ -23,7 +23,7 @@ Mục tiêu chính:
 * **Hybrid Storage Strategy:**
     * **MinIO (Object Storage):** Lưu trữ hình ảnh phi cấu trúc (bằng chứng vi phạm).
     * **SQL Server + Prisma ORM:** Lưu trữ dữ liệu nghiệp vụ có cấu trúc (metadata, sự kiện).
-* **Asynchronous Processing:** Tận dụng cơ chế `Async/Await` của Python để xử lý I/O non-blocking[cite: 920].
+* **Asynchronous Processing:** Tận dụng cơ chế `Async/Await` của Python để xử lý I/O non-blocking.
 
 ## System Architecture
 

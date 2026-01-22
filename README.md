@@ -17,13 +17,13 @@ Mục tiêu chính:
 ## Key Features
 
 * **Real-time Streaming:** Xử lý luồng dữ liệu từ IP Camera qua giao thức RTSP.
-* [cite_start]**Motion Detection (Producer):** Tối ưu hóa băng thông bằng thuật toán phát hiện chuyển động, chỉ gửi dữ liệu khi có sự thay đổi đáng kể (>3000px biến động)[cite: 802, 806].
+* **Motion Detection (Producer):** Tối ưu hóa băng thông bằng thuật toán phát hiện chuyển động, chỉ gửi dữ liệu khi có sự thay đổi đáng kể (>3000px biến động).
 * **AI Inference (Consumer):** Sử dụng mô hình **YOLOv8** để phát hiện và phân loại đối tượng (Mask/No Mask) với độ chính xác cao.
-* [cite_start]**Robust Data Pipeline:** Sử dụng **Apache Kafka** làm xương sống trung chuyển dữ liệu (Producer-Consumer pattern), giải quyết bài toán nghẽn cổ chai (bottleneck)[cite: 680].
+* **Robust Data Pipeline:** Sử dụng **Apache Kafka** làm xương sống trung chuyển dữ liệu (Producer-Consumer pattern), giải quyết bài toán nghẽn cổ chai (bottleneck).
 * **Hybrid Storage Strategy:**
-    * [cite_start]**MinIO (Object Storage):** Lưu trữ hình ảnh phi cấu trúc (bằng chứng vi phạm)[cite: 841].
-    * [cite_start]**SQL Server + Prisma ORM:** Lưu trữ dữ liệu nghiệp vụ có cấu trúc (metadata, sự kiện)[cite: 887].
-* [cite_start]**Asynchronous Processing:** Tận dụng cơ chế `Async/Await` của Python để xử lý I/O non-blocking[cite: 920].
+    * **MinIO (Object Storage):** Lưu trữ hình ảnh phi cấu trúc (bằng chứng vi phạm).
+    * **SQL Server + Prisma ORM:** Lưu trữ dữ liệu nghiệp vụ có cấu trúc (metadata, sự kiện).
+* **Asynchronous Processing:** Tận dụng cơ chế `Async/Await` của Python để xử lý I/O non-blocking[cite: 920].
 
 ## System Architecture
 
